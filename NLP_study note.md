@@ -509,7 +509,7 @@ print(result)
 
 **2) 정규표현식 모듈 함수**
 
-<img src = "/image/Untitled 01.png" width = "600px">
+<img src = "/image/Untitled 1.png" width = "600px">
 
 ### 2. 정규 표현식 실습
 
@@ -1332,7 +1332,7 @@ df
 
 ```
 
-<img src = "/image/Untitled 02.png" width = "600px">
+<img src = "/image/Untitled 2.png" width = "600px">
 
 ```python
 X=df['메일 본문']
@@ -1612,11 +1612,11 @@ all accessor variety was computed # words = 361598
 
 이 값이 높을수록 전체 코퍼스에서 이 문자열 시퀀스는 하나의 단어로 등장할 가능성 높다
 
-<img src = "/image/Untitled 03.png" width = "600px">
+<img src = "/image/Untitled 3.png" width = "600px">
 
 ex) '반포한강공원에'라는 7의 길이를 가진 문자 시퀀스에 대해서 각 내부 문자열의 스코어를 구하는 과정
 
-<img src = "/image/Untitled 04.png" width = "600px">
+<img src = "/image/Untitled 4.png" width = "600px">
 
 ```python
 word_score_table["반포한"].cohesion_forward
@@ -1876,7 +1876,7 @@ $$P(W)=P(w1,w2,w3,w4,w5,...wn)=∏P(wn|w1,...,wn−1)$$
 
 ### 5. 검색 엔진에서의 언어 모델의 예
 
-<img src = "/image/Untitled 05.png" width = "600px">
+<img src = "/image/Untitled 5.png" width = "600px">
 
 ---
 
@@ -1995,7 +1995,7 @@ n-gram을 통한 언어 모델에서는
 
 ex) 4-gram 을 이용한 언어 모델
 
-<img src = "/image/Untitled 06.png" width = "600px">
+<img src = "/image/Untitled 6.png" width = "600px">
 
 $$P(w\text{|boy is spreading}) = \frac{\text{count(boy is spreading}\ w)}{\text{count(boy is spreading)}}$$
 
@@ -2143,7 +2143,7 @@ PPL의 값이 낮다는 것은 테스트 데이터 상에서 높은 정확도를
 
 ### 3. 기존 언어 모델 vs 인공 신경망을 이용한 언어 모델
 
-<img src = "/image/Untitled 07.png" width = "600px">
+<img src = "/image/Untitled 7.png" width = "600px">
 
 ---
 
@@ -2183,7 +2183,7 @@ ex) puppy, cute, lovely  ← 이 세 단어를
 
 ### 2. 단어 표현의 카테고리화
 
-<img src = "/image/Untitled 08.png" width = "600px">
+<img src = "/image/Untitled 8.png" width = "600px">
 
 **Bag of Words** :    국소 표현에(Local Representation)에 속하며, 단어의 빈도수를 카운트(Count)하여 단어를 수치화하는 단어 표현 방법
 
@@ -2395,7 +2395,7 @@ ex)
 
 문서4 : 저는 과일이 좋아요
 
-<img src = "/image/Untitled 09.png" width = "600px">
+<img src = "/image/Untitled 9.png" width = "600px">
 
 ---
 

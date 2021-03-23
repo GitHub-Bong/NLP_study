@@ -3063,6 +3063,283 @@ print(A_prime.round(2))
 
 사이킷런에서 Twenty Newsgroups이라는 20개의 다른 주제를 가진 뉴스 그룹 데이터를 제공
 
-LSA를 사용 문서의 수를 원하는 토픽의 수로 압축해,
+LSA를 사용해 문서의 수를 원하는 토픽의 수로 압축해,
 
 각 토픽당 가장 중요한 단어 5개를 출력하는 실습으로 토픽 모델링을 수행
+
+**1) 뉴스그룹 데이터에 대한 이해**
+
+```python
+import pandas as pd
+from sklearn.datasets import fetch_20newsgroups
+dataset = fetch_20newsgroups(shuffle=True, random_state=1, remove=('headers', 'footers', 'quotes'))
+documents = dataset.data
+len(documents)
+11314 # 훈련에 사용할 뉴스그룹 데이터는 총 11,314개
+
+documents[1]
+"\n\n\n\n\n\n\nYeah, do you expect people to read the FAQ, etc. and actually accept hard\natheism?  No, you need a little leap of faith, Jimmy.  Your logic runs out\nof steam!\n\n\n\n\n\n\n\nJim,\n\nSorry I can't pity you, Jim.  And I'm sorry that you have these feelings of\ndenial about the faith you need to get by.  Oh well, just pretend that it will\nall end happily ever after anyway.  Maybe if you start a new newsgroup,\nalt.atheist.hard, you won't be bummin' so much?\n\n\n\n\n\n\nBye-Bye, Big Jim.  Don't forget your Flintstone's Chewables!  :) \n--\nBake Timmons, III"
+```
+
+target_name에는 이 데이터가 어떤 20개의 카테고리를 갖고 있는 지 저장되어 있다.
+
+```python
+print(dataset.target_names)
+['alt.atheism', 'comp.graphics', 'comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware', 'comp.sys.mac.hardware', 'comp.windows.x', 'misc.forsale', 'rec.autos', 'rec.motorcycles', 'rec.sport.baseball', 'rec.sport.hockey', 'sci.crypt', 'sci.electronics', 'sci.med', 'sci.space', 'soc.religion.christian', 'talk.politics.guns', 'talk.politics.mideast', 'talk.politics.misc', 'talk.religion.misc']
+```
+
+**2) 텍스트 전처리**
+
+아이디어
+
+- 알파벳 제외한 구두점, 숫자, 특수 문자 제거
+- 길이가 짧은 단어 제거
+- 모든 알파벳을 소문자로 바꿔 단어의 개수 줄이기
+
+```python
+news_df = pd.DataFrame({'document':documents})
+# 특수 문자 제거
+news_df['clean_doc'] = news_df['document'].str.replace("[^a-zA-Z]", " ")
+# 길이가 3이하인 단어는 제거 (길이가 짧은 단어 제거)
+news_df['clean_doc'] = news_df['clean_doc'].apply(lambda x: ' '.join([w for w in x.split() if len(w)>3]))
+# 전체 단어에 대한 소문자 변환
+news_df['clean_doc'] = news_df['clean_doc'].apply(lambda x: x.lower())
+
+news_df['clean_doc'][1]
+'yeah expect people read actually accept hard atheism need little leap faith jimmy your logic runs steam sorry pity sorry that have these feelings denial about faith need well just pretend that will happily ever after anyway maybe start newsgroup atheist hard bummin much forget your flintstone chewables bake timmons'
+```
+
+토큰화! 그 다음 불용어 제거!
+
+```python
+from nltk.corpus import stopwords
+stop_words = stopwords.words('english') # NLTK로부터 불용어를 받기
+tokenized_doc = news_df['clean_doc'].apply(lambda x: x.split()) # 토큰화
+tokenized_doc = tokenized_doc.apply(lambda x: [item for item in x if item not in stop_words])
+# 불용어를 제거
+
+print(tokenized_doc[1])
+['yeah', 'expect', 'people', 'read', 'actually', 'accept', 'hard', 'atheism', 'need', 'little', 'leap', 'faith', 'jimmy', 'logic', 'runs', 'steam', 'sorry', 'pity', 'sorry', 'feelings', 'denial', 'faith', 'need', 'well', 'pretend', 'happily', 'ever', 'anyway', 'maybe', 'start', 'newsgroup', 'atheist', 'hard', 'bummin', 'much', 'forget', 'flintstone', 'chewables', 'bake', 'timmons']
+```
+
+**3) TF-IDF 행렬 만들기**
+
+TfidfVectorizer는 기본적으로 토큰화가 되어있지 않은 텍스트 데이터를 입력으로 사용
+
+다시 토큰화 작업을 역으로 취소하는 작업을 수행 
+
+역토큰화 (Detokenization)
+
+```python
+# 역토큰화 (토큰화 작업을 역으로 되돌림)
+detokenized_doc = []
+for i in range(len(news_df)):
+    t = ' '.join(tokenized_doc[i])
+    detokenized_doc.append(t)
+
+news_df['clean_doc'] = detokenized_doc
+
+news_df['clean_doc'][1]
+'yeah expect people read actually accept hard atheism need little leap faith jimmy logic runs steam sorry pity sorry feelings denial faith need well pretend happily ever anyway maybe start newsgroup atheist hard bummin much forget flintstone chewables bake timmons'
+```
+
+TfidfVectorizer를 통해 단어 1,000개에 대한 TF-IDF 행렬 생성
+
+```python
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+vectorizer = TfidfVectorizer(stop_words='english', 
+max_features= 1000, # 상위 1,000개의 단어를 보존 
+max_df = 0.5, 
+smooth_idf=True)
+
+X = vectorizer.fit_transform(news_df['clean_doc'])
+X.shape # TF-IDF 행렬의 크기 확인
+(11314, 1000)
+```
+
+**4) 토픽 모델링 (Topic Modeling)**
+
+사이킷런의 절단된 SVD(Truncated SVD)를 사용 → 차원 축소 가능!
+
+기존 데이터가 20개의 카테고리를 갖고 있었기 때문에, 20개의 토픽을 가졌다고 가정
+
+```python
+from sklearn.decomposition import TruncatedSVD
+svd_model = TruncatedSVD(n_components=20, algorithm='randomized', n_iter=100, random_state=122)
+svd_model.fit(X)
+len(svd_model.components_)
+20 
+
+np.shape(svd_model.components_) # LSA에서 VT에 해당
+(20, 1000)
+```
+
+각 20개의 행의 각 1,000개의 열 중 가장 값이 큰 5개의 값을 찾아서 단어로 출력
+
+```python
+terms = vectorizer.get_feature_names() # 단어 집합. 1,000개의 단어가 저장됨.
+
+def get_topics(components, feature_names, n=5):
+    for idx, topic in enumerate(components):
+        print("Topic %d:" % (idx+1), [(feature_names[i], topic[i].round(5)) for i in topic.argsort()[:-n - 1:-1]])
+get_topics(svd_model.components_,terms)
+
+Topic 1: [('like', 0.2138), ('know', 0.20031), ('people', 0.19334), ('think', 0.17802), ('good', 0.15105)]
+Topic 2: [('thanks', 0.32918), ('windows', 0.29093), ('card', 0.18016), ('drive', 0.1739), ('mail', 0.15131)]
+Topic 3: [('game', 0.37159), ('team', 0.32533), ('year', 0.28205), ('games', 0.25416), ('season', 0.18464)]
+Topic 4: [('drive', 0.52823), ('scsi', 0.20043), ('disk', 0.15518), ('hard', 0.15511), ('card', 0.14049)]
+Topic 5: [('windows', 0.40544), ('file', 0.25619), ('window', 0.1806), ('files', 0.16196), ('program', 0.14009)]
+Topic 6: [('government', 0.16085), ('chip', 0.16071), ('mail', 0.15626), ('space', 0.15047), ('information', 0.13582)]
+Topic 7: [('like', 0.67121), ('bike', 0.14274), ('know', 0.11189), ('chip', 0.11043), ('sounds', 0.10389)]
+Topic 8: [('card', 0.44948), ('sale', 0.21639), ('video', 0.21318), ('offer', 0.14896), ('monitor', 0.1487)]
+Topic 9: [('know', 0.44869), ('card', 0.35699), ('chip', 0.17169), ('video', 0.15289), ('government', 0.15069)]
+Topic 10: [('good', 0.41575), ('know', 0.23137), ('time', 0.18933), ('bike', 0.11317), ('jesus', 0.09421)]
+Topic 11: [('think', 0.7832), ('chip', 0.10776), ('good', 0.10613), ('thanks', 0.08985), ('clipper', 0.07882)]
+Topic 12: [('thanks', 0.37279), ('right', 0.21787), ('problem', 0.2172), ('good', 0.21405), ('bike', 0.2116)]
+Topic 13: [('good', 0.36691), ('people', 0.33814), ('windows', 0.28286), ('know', 0.25238), ('file', 0.18193)]
+Topic 14: [('space', 0.39894), ('think', 0.23279), ('know', 0.17956), ('nasa', 0.15218), ('problem', 0.12924)]
+Topic 15: [('space', 0.3092), ('good', 0.30207), ('card', 0.21615), ('people', 0.20208), ('time', 0.15716)]
+Topic 16: [('people', 0.46951), ('problem', 0.20879), ('window', 0.16), ('time', 0.13873), ('game', 0.13616)]
+Topic 17: [('time', 0.3419), ('bike', 0.26896), ('right', 0.26208), ('windows', 0.19632), ('file', 0.19145)]
+Topic 18: [('time', 0.60079), ('problem', 0.15209), ('file', 0.13856), ('think', 0.13025), ('israel', 0.10728)]
+Topic 19: [('file', 0.4489), ('need', 0.25951), ('card', 0.1876), ('files', 0.17632), ('problem', 0.1491)]
+Topic 20: [('problem', 0.32797), ('file', 0.26268), ('thanks', 0.23414), ('used', 0.19339), ('space', 0.13861)]
+```
+
+---
+
+### 5.  LSA의 장단점 (Pros and Cons of LSA)
+
+쉽고 빠르게 구현이 가능
+
+단어의 잠재적인 의미를 이끌어낼 수 있다 
+  → 문서 유사도 계산 등에서 좋은 성능 보여준다! 
+
+SVD의 특성 상 이미 계산된 LSA에 새로운 데이터를 추가해 계산하려면 처음부터 다시 계산해야 한다. 
+  →즉, 새로운 정보에 대해 업데이트가 어렵다!
+
+**최근 LSA 대신 Word2Vec 등 단어의 의미를 벡터화 할 수 있는 또 다른 방법론인 인공 신경망 기반의 방법론이 각광받는 이유**
+
+---
+
+## 잠재 디리클레 할당 (Latent Dirichlet Allocation, LDA)
+
+토픽 모델링의 대표적인 알고리즘!
+
+문서들은 토픽들의 혼합으로 구성되어 있으며, 토픽들은 확률 분포에 기반하여 단어들을 생성한다고 가정
+
+데이터가 주어지면, LDA는 문서가 생성되던 과정을 역추적
+
+### 1. 잠재 디리클레 할당 (Latent Dirichlet Allocation, LDA) 개요
+
+ex)
+
+3개의 문서 집합을 입력하면 어떤 결과를 보여주는지 간소화 된 예
+
+문서1 : 저는 사과랑 바나나를 먹어요
+
+문서2 : 우리는 귀여운 강아지가 좋아요
+
+문서3 : 저의 깜찍하고 귀여운 강아지가 바나나를 먹어요
+
+문서 집합에서 **토픽이 몇 개가 존재할지 가정**하는 것은 사용자가 해야 할 일
+
+LDA에 2개의 토픽을 찾으라고 요청
+
+전처리 과정을 거친 DTM이 LDA의 입력이 되었다고 가정
+
+세 문서로부터 2개의 토픽을 찾은 결과
+
+LDA는 **각 문서의 토픽 분포**와 **각 토픽 내의 단어 분포**를 추정
+
+**<각 문서의 토픽 분포>**
+
+문서1 : 토픽 A 100%
+
+문서2 : 토픽 B 100%
+
+문서3 : 토픽 B 60%, 토픽 A 40%
+
+**<각 토픽의 단어 분포>**
+
+토픽A : **사과 20%, 바나나 40%, 먹어요 40%**, 귀여운 0%, 강아지 0%, 깜찍하고 0%, 좋아요 0%
+
+토픽B : 사과 0%, 바나나 0%, 먹어요 0%, **귀여운 33%, 강아지 33%, 깜찍하고 16%, 좋아요 16%**
+
+→ 사용자는 위 결과로부터 두 토픽이 각각 과일에 대한 토픽과 강아지에 대한 토픽이라고 판단할 수 있다.
+
+---
+
+### 2. LDA의 가정
+
+DTM 또는 TF-IDF 행렬을 입력으로 한다! → LDA는 단어의 순서는 신경 쓰지 않는다!
+
+**'나는 이 문서를 작성하기 위해서 이런 주제들을 넣을거고, 이런 주제들을 위해서는 이런 단어들을 넣을 거야.'**
+
+**1) 문서에 사용할 단어의 개수 N을 정한다**
+
+**2) 문서에 사용할 토픽의 혼합을 확률 분포에 기반하여 결정한다
+
+    -** Ex) 위 예제와 같이 토픽이 2개라고 했을 때 강아지 토픽을 60%, 과일 토픽을 40%와 같이 선택할 수 있다
+
+**3) 문서에 사용할 각 단어를 (아래와 같이) 정한다
+
+3-1) 토픽 분포에서 토픽 T를 확률적으로 고른다**
+
+    - Ex) 60% 확률로 강아지 토픽을 선택하고, 40% 확률로 과일 토픽을 선택할 수 있다.
+
+**3-2) 선택한 토픽 T에서 단어의 출현 확률 분포에 기반해 문서에 사용할 단어를 고릅니다.**
+
+    - Ex) 강아지 토픽을 선택했다면, 33% 확률로 강아지란 단어를 선택할 수 있다. 3)을 반복하면서 문서를 완성한다.
+
+이러한 과정을 통해 문서가 작성되었다는 가정 하에 
+
+LDA는 토픽을 뽑아내기 위해 위 과정을 역으로 추적하는 **역공학(reverse engineering)** 수행
+
+---
+
+### 3. LDA 수행하기
+
+**1) 사용자는 토픽의 개수 k를 설정**
+
+k를 입력받으면, k개의 토픽이 M개의 전체 문서에 걸쳐 분포되어 있다고 가정
+
+**2) 모든 단어를 k개 중 하나의 토픽에 할당**
+
+이 작업이 끝나면 각 문서는 토픽을 가지며, 토픽은 단어 분포를 가지는 상태
+
+물론 랜덤으로 할당 → 결과는 전부 틀린 상태
+
+**3) 이제 모든 문서의 모든 단어에 대해서 아래의 사항을 반복 진행 (iterative)**
+
+**3-1) 어떤 문서의 각 단어 w는 자신은 잘못된 토픽에 할당되어 있지만, 다른 단어들은 전부 올바른 토픽에 할당되어 있는 상태라고 가정. 이에 따라 단어 w는 아래의 두 가지 기준에 따라서 토픽이 재할당된다**
+
+- p(topic t | document d) : 문서 d의 단어들 중 토픽 t에 해당하는 단어들의 비율
+- p(word w | topic t) : 각 토픽들 t에서 해당 단어 w의 분포
+
+ex)
+
+doc1의 세번째 단어 apple의 토픽을 결정하고자 한다.
+
+![https://wikidocs.net/images/page/30708/lda1.PNG](https://wikidocs.net/images/page/30708/lda1.PNG)
+
+**첫 번째 기준은 문서 doc1의 단어들이 어떤 토픽에 해당하는지**
+
+![https://wikidocs.net/images/page/30708/lda3.PNG](https://wikidocs.net/images/page/30708/lda3.PNG)
+
+토픽 A와 토픽 B에 50 대 50의 비율로 할당 → 어느 토픽에도 속할 가능성이 있다!
+
+**두번째 기준은 단어 apple이 전체 문서에서 어떤 토픽에 할당되어 있는지**
+
+![https://wikidocs.net/images/page/30708/lda2.PNG](https://wikidocs.net/images/page/30708/lda2.PNG)
+
+단어 apple은 토픽 B에 할당될 가능성이 높다! 
+
+---
+
+### 4. 잠재 디리클레 할당과 잠재 의미 분석의 차이
+
+**LSA : DTM 또는 TF-IDF를 차원 축소 해 축소 차원에서 근접 단어들을 토픽으로 묶는다.**
+
+**LDA : 단어가 특정 토픽에 존재할 확률과 문서에 특정 토픽이 존재할 확률을 결합확률로 추정하여 토픽을 추출한다.**

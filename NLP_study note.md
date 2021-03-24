@@ -36,7 +36,7 @@
   * [패딩 (Padding)](#패딩-padding)
     + [1. Numpy 로 패딩하기](#1-numpy-로-패딩하기)
     + [2. 케라스 전처리 도구로 패딩](#2-케라스-전처리-도구로-패딩)
-  * [원 - 핫 인코딩 (One-Hot Encoding)](#원---핫-인코딩-onehot-encoding)
+  * [원 - 핫 인코딩 (One-Hot Encoding)](#원---핫-인코딩-one-hot-encoding)
     + [1. 원 - 핫 인코딩 (One - Hot Encoding) 이란?](#1-원--핫-인코딩-one--hot-encoding-이란)
     + [2. 케라스 (Keras)를 이용한 원-핫 인코딩 (One-Hot-Encoding)](#2-케라스-keras를-이용한-원핫-인코딩-onehotencoding)
     + [3. 원 - 핫 인코딩(One-Hot Encoding)의 한계](#3-원--핫-인코딩onehot-encoding의-한계)

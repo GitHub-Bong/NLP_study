@@ -92,9 +92,12 @@ Github 같은 Remote respository 에 소스 코드를 올려, 본인의 소스 �
 
 ### 이것만 기억해도 충분한 것 같다 나중에는!
 
-git add *
-git status
-git commit -m "메모하고싶은 내용 따옴표안에 적기" 
+git add *  
+
+git status  
+
+git commit -m "메모하고싶은 내용 따옴표안에 적기"   
+
 git push origin master
 
 

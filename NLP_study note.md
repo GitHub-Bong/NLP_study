@@ -110,8 +110,8 @@
     + [2. LDA의 가정](#2-lda의-가정)
     + [3. LDA 수행하기](#3-lda-수행하기)
     + [4. 잠재 디리클레 할당과 잠재 의미 분석의 차이](#4-잠재-디리클레-할당과-잠재-의미-분석의-차이)
-
-
+    + [5. 실습](#5-실습)
+    + [6. 실습 (gensim 사용)](#6-실습-gensim-사용)
 
 # 자연어 처리란?
 
@@ -3450,3 +3450,333 @@ doc1의 세번째 단어 apple의 토픽을 결정하고자 한다.
 **LSA : DTM 또는 TF-IDF를 차원 축소 해 축소 차원에서 근접 단어들을 토픽으로 묶는다.**
 
 **LDA : 단어가 특정 토픽에 존재할 확률과 문서에 특정 토픽이 존재할 확률을 결합확률로 추정하여 토픽을 추출한다.**
+
+ 
+
+---
+
+### 5. 실습
+
+**1) 뉴스 기사 제목 데이터에 대한 이해**
+
+약 15년 동안 발행되었던 뉴스 기사 제목을 모아 놓은 영어 데이터
+
+링크 : [https://www.kaggle.com/therohk/million-headlines](https://www.kaggle.com/therohk/million-headlines)
+
+```python
+import pandas as pd
+import urllib.request
+urllib.request.urlretrieve("https://raw.githubusercontent.com/franciscadias/data/master/abcnews-date-text.csv", filename="abcnews-date-text.csv")
+data = pd.read_csv('abcnews-date-text.csv', error_bad_lines=False)
+
+print(len(data))
+1082168
+
+print(data.head(5))
+   publish_date                                      headline_text
+0      20030219  aba decides against community broadcasting lic...
+1      20030219     act fire witnesses must be aware of defamation
+2      20030219     a g calls for infrastructure protection summit
+3      20030219           air nz staff in aust strike for pay rise
+4      20030219      air nz strike to affect australian travellers
+
+text = data[['headline_text']]
+text.head(5)
+                                       headline_text
+0  aba decides against community broadcasting lic...
+1     act fire witnesses must be aware of defamation
+2     a g calls for infrastructure protection summit
+3           air nz staff in aust strike for pay rise
+4      air nz strike to affect australian travellers
+```
+
+**2) 텍스트 전처리**
+
+불용어 제거, 표제어 추출, 길이가 짧은 단어 제거
+
+먼저 **단어 토큰화**
+
+```python
+import nltk
+text['headline_text'] = text.apply(lambda row: nltk.word_tokenize(row['headline_text']), axis=1)
+NLTK의 word_tokenize를 통해 단어 토큰화를 수행합니다.
+
+print(text.head(5))
+                                       headline_text
+0  [aba, decides, against, community, broadcastin...
+1  [act, fire, witnesses, must, be, aware, of, de...
+2  [a, g, calls, for, infrastructure, protection,...
+3  [air, nz, staff, in, aust, strike, for, pay, r...
+4  [air, nz, strike, to, affect, australian, trav...
+```
+
+**불용어 제거**
+
+```python
+from nltk.corpus import stopwords
+stop = stopwords.words('english')
+text['headline_text'] = text['headline_text'].apply(lambda x: [word for word in x if word not in (stop)])
+
+print(text.head(5))
+                                       headline_text
+0   [aba, decides, community, broadcasting, licence]
+1    [act, fire, witnesses, must, aware, defamation]
+2     [g, calls, infrastructure, protection, summit]
+3          [air, nz, staff, aust, strike, pay, rise]
+4  [air, nz, strike, affect, australian, travellers]
+```
+
+**표제어 추출**
+
+```python
+from nltk.stem import WordNetLemmatizer
+text['headline_text'] = text['headline_text'].apply(lambda x: [WordNetLemmatizer().lemmatize(word, pos='v') for word in x])
+print(text.head(5))
+                                       headline_text
+0       [aba, decide, community, broadcast, licence]
+1      [act, fire, witness, must, aware, defamation]
+2      [g, call, infrastructure, protection, summit]
+3          [air, nz, staff, aust, strike, pay, rise]
+4  [air, nz, strike, affect, australian, travellers]
+```
+
+**길이가 3이하인 단어 제거**
+
+```python
+tokenized_doc = text['headline_text'].apply(lambda x: [word for word in x if len(word) > 3])
+print(tokenized_doc[:5])
+0       [decide, community, broadcast, licence]
+1      [fire, witness, must, aware, defamation]
+2    [call, infrastructure, protection, summit]
+3                   [staff, aust, strike, rise]
+4      [strike, affect, australian, travellers]
+```
+
+**3) TF-IDF 행렬 만들기**
+
+```python
+# 역토큰화 (토큰화 작업을 되돌림)
+detokenized_doc = []
+for i in range(len(text)):
+    t = ' '.join(tokenized_doc[i])
+    detokenized_doc.append(t)
+
+text['headline_text'] = detokenized_doc # 다시 text['headline_text']에 재저장
+
+text['headline_text'][:5]
+0       decide community broadcast licence
+1       fire witness must aware defamation
+2    call infrastructure protection summit
+3                   staff aust strike rise
+4      strike affect australian travellers
+Name: headline_text, dtype: object
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer = TfidfVectorizer(stop_words='english', 
+max_features= 1000) # 상위 1,000개의 단어를 보존 
+X = vectorizer.fit_transform(text['headline_text'])
+X.shape # TF-IDF 행렬의 크기 확인
+(1082168, 1000)
+
+# 1,082,168 × 1,000의 크기를 가진 TF-IDF 행렬
+```
+
+**4) 토픽 모델링**
+
+```python
+from sklearn.decomposition import LatentDirichletAllocation
+lda_model=LatentDirichletAllocation(n_components=10,learning_method='online',random_state=777,max_iter=1)
+lda_top=lda_model.fit_transform(X)
+print(lda_model.components_)
+print(lda_model.components_.shape) 
+[[1.00001533e-01 1.00001269e-01 1.00004179e-01 ... 1.00006124e-01
+  1.00003111e-01 1.00003064e-01]
+ [1.00001199e-01 1.13513398e+03 3.50170830e+03 ... 1.00009349e-01
+  1.00001896e-01 1.00002937e-01]
+ [1.00001811e-01 1.00001151e-01 1.00003566e-01 ... 1.00002693e-01
+  1.00002061e-01 7.53381835e+02]
+ ...
+ [1.00001065e-01 1.00001689e-01 1.00003278e-01 ... 1.00006721e-01
+  1.00004902e-01 1.00004759e-01]
+ [1.00002401e-01 1.00000732e-01 1.00002989e-01 ... 1.00003517e-01
+  1.00001428e-01 1.00005266e-01]
+ [1.00003427e-01 1.00002313e-01 1.00007340e-01 ... 1.00003732e-01
+  1.00001207e-01 1.00005153e-01]]
+(10, 1000)
+terms = vectorizer.get_feature_names() # 단어 집합. 1,000개의 단어가 저장
+
+def get_topics(components, feature_names, n=5):
+    for idx, topic in enumerate(components):
+        print("Topic %d:" % (idx+1), [(feature_names[i], topic[i].round(2)) for i in topic.argsort()[:-n - 1:-1]])
+get_topics(lda_model.components_,terms)
+Topic 1: [('government', 8725.19), ('sydney', 8393.29), ('queensland', 7720.12), ('change', 5874.27), ('home', 5674.38)]
+Topic 2: [('australia', 13691.08), ('australian', 11088.95), ('melbourne', 7528.43), ('world', 6707.7), ('south', 6677.03)]
+Topic 3: [('death', 5935.06), ('interview', 5924.98), ('kill', 5851.6), ('jail', 4632.85), ('life', 4275.27)]
+Topic 4: [('house', 6113.49), ('2016', 5488.19), ('state', 4923.41), ('brisbane', 4857.21), ('tasmania', 4610.97)]
+Topic 5: [('court', 7542.74), ('attack', 6959.64), ('open', 5663.0), ('face', 5193.63), ('warn', 5115.01)]
+Topic 6: [('market', 5545.86), ('rural', 5502.89), ('plan', 4828.71), ('indigenous', 4223.4), ('power', 3968.26)]
+Topic 7: [('charge', 8428.8), ('election', 7561.63), ('adelaide', 6758.36), ('make', 5658.99), ('test', 5062.69)]
+Topic 8: [('police', 12092.44), ('crash', 5281.14), ('drug', 4290.87), ('beat', 3257.58), ('rise', 2934.92)]
+Topic 9: [('fund', 4693.03), ('labor', 4047.69), ('national', 4038.68), ('council', 4006.62), ('claim', 3604.75)]
+Topic 10: [('trump', 11966.41), ('perth', 6456.53), ('report', 5611.33), ('school', 5465.06), ('woman', 5456.76)]
+```
+
+---
+
+### 6. 실습 (gensim 사용)
+
+Twenty Newsgroups이라고 불리는 20개의 다른 주제를 가진 뉴스 데이터를 다시 사용
+
+동일한 전처리 과정을 거친 후에 tokenized_doc 으로 저장한 상태
+
+**1) 정수 인코딩과 단어 집합 만들기**
+
+```python
+tokenized_doc[:5]
+0    [well, sure, about, story, seem, biased, what,...
+1    [yeah, expect, people, read, actually, accept,...
+2    [although, realize, that, principle, your, str...
+3    [notwithstanding, legitimate, fuss, about, thi...
+4    [well, will, have, change, scoring, playoff, p...
+Name: clean_doc, dtype: object
+```
+
+gensim의 corpora.Dictionary() 사용
+
+→ 각 단어를 (word_id, word_frequency)의 형태로 손쉽게 바꾼다!
+
+→ word_id 단어가 정수 인코딩된 값
+
+→ word_frequency 해당 뉴스에서 해당 단어의 빈도수
+
+```python
+from gensim import corpora
+dictionary = corpora.Dictionary(tokenized_doc)
+corpus = [dictionary.doc2bow(text) for text in tokenized_doc]
+print(corpus[1]) # 수행된 결과에서 두번째 뉴스 출력. 첫번째 문서의 인덱스는 0
+
+[(52, 1), (55, 1), (56, 1), (57, 1), (58, 1), (59, 1), (60, 1), (61, 1), (62, 1), (63, 1), (64, 1), (65, 1), (66, 2), (67, 1), (68, 1), (69, 1), (70, 1), (71, 2), (72, 1), (73, 1), (74, 1), (75, 1), (76, 1), (77, 1), (78, 2), (79, 1), (80, 1), (81, 1), (82, 1), (83, 1), (84, 1), (85, 2), (86, 1), (87, 1), (88, 1), (89, 1)]
+
+print(dictionary[66])
+faith
+
+len(dictionary)
+65284
+```
+
+**2) LDA 모델 훈련**
+
+기존의 뉴스 데이터가 총 20개의 카테고리
+
+→ 토픽의 개수를 20으로 LDA 모델을 학습
+
+```python
+import gensim
+NUM_TOPICS = 20 #20개의 토픽, k=20
+ldamodel = gensim.models.ldamodel.LdaModel(corpus, num_topics = NUM_TOPICS, 
+id2word=dictionary, passes=15)
+# passes : 알고리즘 동작 횟수 <- 알고리즘이 결정하는 토픽의 값이 적절히 수렴할 수 있도록 충분히 적당한 횟수로
+# num_words : 출력하고 싶은 단어의 수
+topics = ldamodel.print_topics(num_words=4)
+for topic in topics:
+    print(topic)
+(0, '0.015*"drive" + 0.014*"thanks" + 0.012*"card" + 0.012*"system"')
+(1, '0.009*"back" + 0.009*"like" + 0.009*"time" + 0.008*"went"')
+(2, '0.012*"colorado" + 0.010*"david" + 0.006*"decenso" + 0.005*"tyre"')
+(3, '0.020*"number" + 0.018*"wire" + 0.013*"bits" + 0.013*"filename"')
+(4, '0.038*"space" + 0.013*"nasa" + 0.011*"research" + 0.010*"medical"')
+(5, '0.014*"price" + 0.010*"sale" + 0.009*"good" + 0.008*"shipping"')
+(6, '0.012*"available" + 0.009*"file" + 0.009*"information" + 0.008*"version"')
+(7, '0.021*"would" + 0.013*"think" + 0.012*"people" + 0.011*"like"')
+(8, '0.035*"window" + 0.021*"display" + 0.017*"widget" + 0.013*"application"')
+(9, '0.012*"people" + 0.010*"jesus" + 0.007*"armenian" + 0.007*"israel"')
+(10, '0.008*"government" + 0.007*"system" + 0.006*"public" + 0.006*"encryption"')
+(11, '0.013*"germany" + 0.008*"sweden" + 0.008*"switzerland" + 0.007*"gaza"')
+(12, '0.020*"game" + 0.018*"team" + 0.015*"games" + 0.013*"play"')
+(13, '0.024*"apple" + 0.014*"water" + 0.013*"ground" + 0.011*"cable"')
+(14, '0.011*"evidence" + 0.010*"believe" + 0.010*"truth" + 0.010*"church"')
+(15, '0.016*"president" + 0.010*"states" + 0.007*"united" + 0.007*"year"')
+(16, '0.047*"file" + 0.035*"output" + 0.033*"entry" + 0.021*"program"')
+(17, '0.008*"dept" + 0.008*"devils" + 0.007*"caps" + 0.007*"john"')
+(18, '0.011*"year" + 0.009*"last" + 0.007*"first" + 0.006*"runs"')
+(19, '0.013*"outlets" + 0.013*"norton" + 0.012*"quantum" + 0.008*"neck"')
+
+# 각 단어 앞에 수치는 단어의 해당 토픽에 대한 기여도
+```
+
+**3) LDA 시각화**
+
+pyLDAvis의 설치 필요
+
+```python
+pip install pyLDAvis
+```
+
+LDA 시각화 
+
+```python
+import pyLDAvis.gensim
+pyLDAvis.enable_notebook()
+vis = pyLDAvis.gensim.prepare(ldamodel, corpus, dictionary)
+pyLDAvis.display(vis)
+```
+
+**토픽 별 단어 분포**
+
+![https://wikidocs.net/images/page/30708/visualization_final.PNG](https://wikidocs.net/images/page/30708/visualization_final.PNG)
+
+좌측의 원들 ← 각각 20개의 토픽들
+
+각 원과의 거리는 각 토픽들이 서로 얼마나 다른지
+
+위의 그림에서 10번 토픽 클릭 → 우측에는 10번 토픽에 대한 정보
+
+💡주의! LDA 모델 출력 결과 : 토픽 0~19    /  LDA 시각화 결과 : 토픽 1~20
+
+**4) 문서 별 토픽 분포 보기**
+
+```python
+for i, topic_list in enumerate(ldamodel[corpus]):
+    if i==5:
+        break
+    print(i,'번째 문서의 topic 비율은',topic_list)
+
+0 번째 문서의 topic 비율은 [(7, 0.3050222), (9, 0.5070568), (11, 0.1319604), (18, 0.042834017)]
+1 번째 문서의 topic 비율은 [(0, 0.031606797), (7, 0.7529218), (13, 0.02924682), (14, 0.12861845), (17, 0.037851967)]
+2 번째 문서의 topic 비율은 [(7, 0.52241164), (9, 0.36602455), (16, 0.09760969)]
+3 번째 문서의 topic 비율은 [(1, 0.16926806), (5, 0.04912094), (6, 0.04034211), (7, 0.11710636), (10, 0.5854137), (15, 0.02776434)]
+4 번째 문서의 topic 비율은 [(7, 0.42152268), (12, 0.21917087), (17, 0.32781804)]
+```
+
+(숫자, 확률) : 각각 토픽 번호와 해당 토픽이 해당 문서에서 차지하는 분포도 의미
+
+데이터프레임 형식으로 출력
+
+```python
+def make_topictable_per_doc(ldamodel, corpus):
+    topic_table = pd.DataFrame()
+
+    # 몇 번째 문서인지를 의미하는 문서 번호와 해당 문서의 토픽 비중을 한 줄씩 꺼낸다
+    for i, topic_list in enumerate(ldamodel[corpus]):
+        doc = topic_list[0] if ldamodel.per_word_topics else topic_list            
+        doc = sorted(doc, key=lambda x: (x[1]), reverse=True)
+        # 각 문서에 대해서 비중이 높은 토픽순으로 토픽을 정렬
+        # EX) 정렬 전 0번 문서 : (2번 토픽, 48.5%), (8번 토픽, 25%), (10번 토픽, 5%), (12번 토픽, 21.5%), 
+        # Ex) 정렬 후 0번 문서 : (2번 토픽, 48.5%), (8번 토픽, 25%), (12번 토픽, 21.5%), (10번 토픽, 5%)
+
+        # 모든 문서에 대해서 각각 아래를 수행
+        for j, (topic_num, prop_topic) in enumerate(doc): #  몇 번 토픽인지와 비중을 나눠서 저장
+            if j == 0:  # 정렬을 한 상태이므로 가장 앞에 있는 것이 가장 비중이 높은 토픽
+                topic_table = topic_table.append(pd.Series([int(topic_num), round(prop_topic,4), topic_list]), ignore_index=True)
+                # 가장 비중이 높은 토픽과, 가장 비중이 높은 토픽의 비중과, 전체 토픽의 비중을 저장
+            else:
+                break
+    return(topic_table)
+
+topictable = make_topictable_per_doc(ldamodel, corpus)
+topictable = topictable.reset_index() # 문서 번호을 의미하는 열(column)로 사용하기 위해 인덱스 열을 하나 더 생성
+topictable.columns = ['문서 번호', '가장 비중이 높은 토픽', '가장 높은 토픽의 비중', '각 토픽의 비중']
+topictable[:10]
+```
+
+![https://wikidocs.net/images/page/30708/lda4.PNG](https://wikidocs.net/images/page/30708/lda4.PNG)

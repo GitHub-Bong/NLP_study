@@ -1,7 +1,7 @@
 # 딥 러닝을 이용한 자연어 처리 입문
 
-- [자연어 처리란?](#자연어-처리란?)
-- [텍스트 전처리 (Text preprocessing)](#텍스트-전처리-(text-preprocessing))
+- [자연어 처리란?](#자연어-처리란)
+- [텍스트 전처리 (Text preprocessing)](#텍스트-전처리-text-preprocessing)
   * [토큰화 Tokenization](#토큰화-tokenization)
     + [1. 단어 토큰화 Word Tokenization](#1.-단어-토큰화-word-tokenization)
     + [2. 토큰화 중 생기는 선택의 순간](#2.-토큰화-중-생기는-선택의-순간)

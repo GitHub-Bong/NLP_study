@@ -156,11 +156,11 @@ model.add(SimpleRNN(hidden_size, return_sequences = True))
 
 ![image](https://wikidocs.net/images/page/22886/rnn_image5_ver2.PNG)
 
-하나의 출력값을 예측하기 위해 기본적으로 __두 개의 메모리 셀__을 사용     
+하나의 출력값을 예측하기 위해 기본적으로 __두 개의 메모리 셀__ 을 사용     
 
-첫번째 메모리 셀 (주황색 메모리 셀)  :  이전처럼 **앞 시점의 은닉 상태(Forward States)**를 전달받아 현재의 은닉 상태 계산      
+첫번째 메모리 셀 (주황색 메모리 셀)  :  이전처럼 **앞 시점의 은닉 상태(Forward States)** 를 전달받아 현재의 은닉 상태 계산      
 
-두번째 메모리 셀 (초록색 메모리 셀)  :  **뒤 시점의 은닉 상태(Backward States)**를 전달 받아 현재의 은닉 상태를 계산     
+두번째 메모리 셀 (초록색 메모리 셀)  :  **뒤 시점의 은닉 상태(Backward States)** 를 전달 받아 현재의 은닉 상태를 계산     
 
 ```python
 from tensorflow.keras.models import Sequential
@@ -242,11 +242,11 @@ hidden state : [[-0.866719    0.95010996 -0.99262357]], shape: (1, 3)
 
 (1, 3) 크기의 텐서 출력  <-  __마지막 시점의 은닉 상태__     
 
-기본적으로 __return_sequences__가 __False__인 경우에 __SimpleRNN은 마지막 시점의 은닉 상태만 출력__     
+기본적으로 __return_sequences__ 가 __False__ 인 경우에 __SimpleRNN은 마지막 시점의 은닉 상태만 출력__     
 
 
 
-__return_sequences__를 __True__로 지정해 모든 시점의 은닉 상태를 출력
+__return_sequences__ 를 __True__ 로 지정해 모든 시점의 은닉 상태를 출력
 
 ```python
 rnn = SimpleRNN(3, return_sequences=True)
@@ -264,9 +264,9 @@ hidden states : [[[ 0.92948604 -0.9985648   0.98355013]
 
 ​     
 
-__return_state__가 __True__일 경우 __return_sequences__의 __True/False__ 여부와 상관없이 마지막 시점의 은닉 상태 출력       
+__return_state__ 가 __True__ 일 경우 __return_sequences__ 의 __True/False__ 여부와 상관없이 마지막 시점의 은닉 상태 출력       
 
-__return_sequences__가 __True__이면서, __return_state__를 __True__로 할 경우 SimpleRNN은 두 개의 출력 리턴
+__return_sequences__ 가 __True__ 이면서, __return_state__ 를 __True__ 로 할 경우 SimpleRNN은 두 개의 출력 리턴
 
 ```python
 rnn = SimpleRNN(3, return_sequences=True, return_state=True)
@@ -282,13 +282,13 @@ hidden states : [[[ 0.29839835 -0.99608386  0.2994854 ]
 last hidden state : [[-0.5144398  -0.5037417   0.96605766]], shape: (1, 3)
 ```
 
-__첫번째 출력__  <-  __return_sequences=True__로 __모든 시점의 은닉 상태__ 출력
+__첫번째 출력__  <-  __return_sequences=True__ 로 __모든 시점의 은닉 상태__ 출력
 
-__두번째 출력__  <-  __return_state=True__로 __마지막 시점의 은닉 상태__ 출력     
+__두번째 출력__  <-  __return_state=True__ 로 __마지막 시점의 은닉 상태__ 출력     
 
 ​     
 
-__return_sequences__는 __False__인데, __retun_state__가 __True__인 경우
+__return_sequences__ 는 __False__ 인데, __retun_state__ 가 __True__ 인 경우
 
 ```python
 rnn = SimpleRNN(3, return_sequences=False, return_state=True)

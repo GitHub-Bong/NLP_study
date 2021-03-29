@@ -159,7 +159,7 @@ __(4) 출력 게이트와 은닉 상태(단기 상태)
 
 ​     
 
-__return_sequences__가 __False__, __return_state__가 __True__ 인 경우     
+__return_sequences__ 가 __False__, __return_state__ 가 __True__ 인 경우     
 
 ```python
 lstm = LSTM(3, return_sequences=False, return_state=True)
@@ -175,17 +175,17 @@ last cell state : [[-0.04346419  0.44769213 -0.2644241 ]], shape: (1, 3)
 
 __SimpleRNN 때와는 달리, 세 개의 결과 반환__     
 
-__첫 번째 결과__  <-  __return_sequences__가 __False__이므로 __마지막 시점의 은닉 상태__ 출력     
+__첫 번째 결과__  <-  __return_sequences__ 가 __False__ 이므로 __마지막 시점의 은닉 상태__ 출력     
 
 ​     
 
 __SimpleRNN과 다른 점!__     
 
-__return_state__를 __True__로 둔 경우 마지막 시점의 은닉 상태뿐만 아니라 __셀 상태까지 반환__      
+__return_state __를 __True__ 로 둔 경우 마지막 시점의 은닉 상태뿐만 아니라 __셀 상태까지 반환__      
 
 ​     
 
-__return_sequences__가 __True__ 인 경우
+__return_sequences__ 가 __True__ 인 경우
 
 ```python
 lstm = LSTM(3, return_sequences=True, return_state=True)
@@ -202,7 +202,7 @@ last hidden state : [[-0.27381724  0.05733536 -0.04240693]], shape: (1, 3)
 last cell state : [[-0.39230722  1.5474017  -0.6344505 ]], shape: (1, 3)
 ```
 
-__return_sequences__가 __True__이므로 첫번째 출력값은 __모든 시점의 은닉 상태__ 출력
+__return_sequences n__가 __True__ 이므로 첫번째 출력값은 __모든 시점의 은닉 상태__ 출력
 
 <br/>
 
@@ -222,7 +222,7 @@ r_init = tf.keras.initializers.Constant(value=0.1)
 
 ​     
 
-__return_sequences__가 __False__이고, __return_state__가 __True__인 경우
+__return_sequences__ 가 __False__이고, __return_state__ 가 __True__ 인 경우
 
 ```python
 bilstm = Bidirectional(LSTM(3, return_sequences=False, return_state=True, \
@@ -241,17 +241,17 @@ backward state : [[0.70387346 0.70387346 0.70387346]], shape: (1, 3)
 
 ![image](https://wikidocs.net/images/page/94748/bilstm3.PNG)
 
-__5__개의 값 반환      
+__5__ 개의 값 반환      
 
-__return_state__가 __True__인 경우 정방향 LSTM의 은닉 상태와 셀 상태, 역방향 LSTM의 은닉 상태와 셀 상태 4가지를 반환      
+__return_state__ 가 __True __인 경우 정방향 LSTM의 은닉 상태와 셀 상태, 역방향 LSTM의 은닉 상태와 셀 상태 4가지를 반환      
 
-__forward_h__와 __backward_h__는 각각 정방향 LSTM의 마지막 시점의 은닉 상태와 역방향 LSTM의 첫번째 시점의 은닉 상태값     
+__forward_h__ 와 __backward_h__ 는 각각 정방향 LSTM의 마지막 시점의 은닉 상태와 역방향 LSTM의 첫번째 시점의 은닉 상태값     
 
 ​	-> __이 두 값을 연결한 값이 hidden_states에 출력되는 값__
 
 ​       
 
-__return_sequences__가 __False__인 경우 정방향 LSTM의 마지막 시점의 은닉 상태와 역방향 LSTM의 첫번째 시점의 은닉 상태가 연결된 채 반환 
+__return_sequences __ 가 __False__ 인 경우 정방향 LSTM의 마지막 시점의 은닉 상태와 역방향 LSTM의 첫번째 시점의 은닉 상태가 연결된 채 반환 
 
 ​	-> __첫번째 출력값의 크기 (1, 6)__      
 
@@ -261,7 +261,7 @@ __return_sequences__가 __False__인 경우 정방향 LSTM의 마지막 시점�
 
 <br/>
 
-현재 은닉 상태의 값을 고정시켜두었기 때문에 __return_sequences__를 __True__로 할 경우, 출력이 어떻게 바뀌는지 비교가 가능     
+현재 은닉 상태의 값을 고정시켜두었기 때문에 __return_sequences__ 를 __True__ 로 할 경우, 출력이 어떻게 바뀌는지 비교가 가능     
 
 ```python
 bilstm = Bidirectional(LSTM(3, return_sequences=True, return_state=True, \
@@ -283,7 +283,7 @@ backward state : [[0.70387346 0.70387346 0.70387346]], shape: (1, 3)
 
 ![image](https://wikidocs.net/images/page/94748/bilstm1.PNG)
 
-__hidden states__의 출력값에서 이제 __모든 시점의 은닉 상태 출력__     
+__hidden states__ 의 출력값에서 이제 __모든 시점의 은닉 상태 출력__     
 
-__역방향 LSTM의 첫번째 시점의 은닉 상태__는 더 이상 __정방향 LSTM의 마지막 시점의 은닉 상태__와 연결되는 것이 아니라 __정방향 LSTM의 첫번째 시점의 은닉 상태__와 연결된다    
+__역방향 LSTM의 첫번째 시점의 은닉 상태__ 는 더 이상 __정방향 LSTM의 마지막 시점의 은닉 상태__ 와 연결되는 것이 아니라 __정방향 LSTM의 첫번째 시점의 은닉 상태__ 와 연결된다    
 

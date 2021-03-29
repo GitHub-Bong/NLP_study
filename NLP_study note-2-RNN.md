@@ -184,3 +184,120 @@ model.add(Bidirectional(SimpleRNN(hidden_size, return_sequences = True)))
 model.add(Bidirectional(SimpleRNN(hidden_size, return_sequences = True)))
 ```
 
+<br/>
+
+<br/>
+
+
+
+----------------------
+
+<br/>
+
+## Keras 로 실습     
+
+임의의 입력 생성 
+
+```python
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import SimpleRNN, LSTM, Bidirectional
+
+train_X = [[0.1, 4.2, 1.5, 1.1, 2.8], [1.0, 3.1, 2.5, 0.7, 1.1], [0.3, 2.1, 1.5, 2.1, 0.1], [2.2, 1.4, 0.5, 0.9, 1.1]]
+print(np.shape(train_X))
+(4, 5) 
+# 단어 벡터 차원        5  
+# 문장 길이(timesteps) 4
+```
+
+__RNN은 2D 텐서가 아니라 3D 텐서를 입력을 받는다!__       
+
+__2D 텐서를 배치 크기 1을 추가해줌으로써 3D 텐서로 변경__     
+
+
+
+```python
+train_X = [[[0.1, 4.2, 1.5, 1.1, 2.8], [1.0, 3.1, 2.5, 0.7, 1.1], [0.3, 2.1, 1.5, 2.1, 0.1], [2.2, 1.4, 0.5, 0.9, 1.1]]]
+train_X = np.array(train_X, dtype=np.float32)
+print(train_X.shape)
+(1, 4, 5)
+# (batch_size, timesteps, input_dim) 가 (1, 4, 5)의 크기를 가지는 3D 텐서
+```
+
+​     
+
+SimpleRNN에 대표적인 parameter로 __return_sequences__ 와 __return_state__ 가 있다     
+
+기본값으로는 둘 다 False     
+
+```python
+rnn = SimpleRNN(3)
+# rnn = SimpleRNN(3, return_sequences=False, return_state=False)와 동일.
+hidden_state = rnn(train_X)
+
+print('hidden state : {}, shape: {}'.format(hidden_state, hidden_state.shape))
+
+hidden state : [[-0.866719    0.95010996 -0.99262357]], shape: (1, 3)
+```
+
+(1, 3) 크기의 텐서 출력  <-  __마지막 시점의 은닉 상태__     
+
+기본적으로 __return_sequences__가 __False__인 경우에 __SimpleRNN은 마지막 시점의 은닉 상태만 출력__     
+
+
+
+__return_sequences__를 __True__로 지정해 모든 시점의 은닉 상태를 출력
+
+```python
+rnn = SimpleRNN(3, return_sequences=True)
+hidden_states = rnn(train_X)
+
+print('hidden states : {}, shape: {}'.format(hidden_states, hidden_states.shape))
+
+hidden states : [[[ 0.92948604 -0.9985648   0.98355013]
+  [ 0.89172053 -0.9984244   0.191779  ]
+  [ 0.6681082  -0.96070355  0.6493537 ]
+  [ 0.95280755 -0.98054564  0.7224146 ]]], shape: (1, 4, 3)
+```
+
+(1, 4, 3) 크기의 텐서 출력  <- __모든 시점(timesteps)에 대해 은닉 상태 값 출력해 (1, 4, 3) 크기의 텐서 출력__      
+
+​     
+
+__return_state__가 __True__일 경우 __return_sequences__의 __True/False__ 여부와 상관없이 마지막 시점의 은닉 상태 출력       
+
+__return_sequences__가 __True__이면서, __return_state__를 __True__로 할 경우 SimpleRNN은 두 개의 출력 리턴
+
+```python
+rnn = SimpleRNN(3, return_sequences=True, return_state=True)
+hidden_states, last_state = rnn(train_X)
+
+print('hidden states : {}, shape: {}'.format(hidden_states, hidden_states.shape))
+print('last hidden state : {}, shape: {}'.format(last_state, last_state.shape))
+
+hidden states : [[[ 0.29839835 -0.99608386  0.2994854 ]
+  [ 0.9160876   0.01154806  0.86181474]
+  [-0.20252597 -0.9270214   0.9696659 ]
+  [-0.5144398  -0.5037417   0.96605766]]], shape: (1, 4, 3)
+last hidden state : [[-0.5144398  -0.5037417   0.96605766]], shape: (1, 3)
+```
+
+__첫번째 출력__  <-  __return_sequences=True__로 __모든 시점의 은닉 상태__ 출력
+
+__두번째 출력__  <-  __return_state=True__로 __마지막 시점의 은닉 상태__ 출력     
+
+​     
+
+__return_sequences__는 __False__인데, __retun_state__가 __True__인 경우
+
+```python
+rnn = SimpleRNN(3, return_sequences=False, return_state=True)
+hidden_state, last_state = rnn(train_X)
+
+print('hidden state : {}, shape: {}'.format(hidden_state, hidden_state.shape))
+print('last hidden state : {}, shape: {}'.format(last_state, last_state.shape))
+hidden state : [[0.07532981 0.97772664 0.97351676]], shape: (1, 3)
+last hidden state : [[0.07532981 0.97772664 0.97351676]], shape: (1, 3)
+```
+
+__두 개의 출력 모두 마지막 시점의 은닉 상태 출력__ 

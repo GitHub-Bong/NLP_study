@@ -147,3 +147,143 @@ __(4) 출력 게이트와 은닉 상태(단기 상태)
 
 값이 걸러지는 효과가 발생하여 은닉 상태가 된다! 
 
+<br/>
+
+<br/>
+
+------
+
+<br/>
+
+## Keras 로 실습     
+
+​     
+
+__return_sequences__가 __False__, __return_state__가 __True__ 인 경우     
+
+```python
+lstm = LSTM(3, return_sequences=False, return_state=True)
+hidden_state, last_state, last_cell_state = lstm(train_X)
+
+print('hidden state : {}, shape: {}'.format(hidden_state, hidden_state.shape))
+print('last hidden state : {}, shape: {}'.format(last_state, last_state.shape))
+print('last cell state : {}, shape: {}'.format(last_cell_state, last_cell_state.shape))
+hidden state : [[-0.00263056  0.20051427 -0.22501363]], shape: (1, 3)
+last hidden state : [[-0.00263056  0.20051427 -0.22501363]], shape: (1, 3)
+last cell state : [[-0.04346419  0.44769213 -0.2644241 ]], shape: (1, 3)
+```
+
+__SimpleRNN 때와는 달리, 세 개의 결과 반환__     
+
+__첫 번째 결과__  <-  __return_sequences__가 __False__이므로 __마지막 시점의 은닉 상태__ 출력     
+
+​     
+
+__SimpleRNN과 다른 점!__     
+
+__return_state__를 __True__로 둔 경우 마지막 시점의 은닉 상태뿐만 아니라 __셀 상태까지 반환__      
+
+​     
+
+__return_sequences__가 __True__ 인 경우
+
+```python
+lstm = LSTM(3, return_sequences=True, return_state=True)
+hidden_states, last_hidden_state, last_cell_state = lstm(train_X)
+
+print('hidden states : {}, shape: {}'.format(hidden_states, hidden_states.shape))
+print('last hidden state : {}, shape: {}'.format(last_hidden_state, last_hidden_state.shape))
+print('last cell state : {}, shape: {}'.format(last_cell_state, last_cell_state.shape))
+hidden states : [[[ 0.1383949   0.01107763 -0.00315794]
+  [ 0.0859854   0.03685492 -0.01836833]
+  [-0.02512104  0.12305924 -0.0891041 ]
+  [-0.27381724  0.05733536 -0.04240693]]], shape: (1, 4, 3)
+last hidden state : [[-0.27381724  0.05733536 -0.04240693]], shape: (1, 3)
+last cell state : [[-0.39230722  1.5474017  -0.6344505 ]], shape: (1, 3)
+```
+
+__return_sequences__가 __True__이므로 첫번째 출력값은 __모든 시점의 은닉 상태__ 출력
+
+<br/>
+
+<br/>
+
+## Bidirectional (LSTM)   이해하기     
+
+​     
+
+출력되는 은닉 상태 값 고정
+
+```python
+k_init = tf.keras.initializers.Constant(value=0.1)
+b_init = tf.keras.initializers.Constant(value=0)
+r_init = tf.keras.initializers.Constant(value=0.1)
+```
+
+​     
+
+__return_sequences__가 __False__이고, __return_state__가 __True__인 경우
+
+```python
+bilstm = Bidirectional(LSTM(3, return_sequences=False, return_state=True, \
+                            kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
+hidden_states, forward_h, forward_c, backward_h, backward_c = bilstm(train_X)
+
+
+print('hidden states : {}, shape: {}'.format(hidden_states, hidden_states.shape))
+print('forward state : {}, shape: {}'.format(forward_h, forward_h.shape))
+print('backward state : {}, shape: {}'.format(backward_h, backward_h.shape))
+
+hidden states : [[0.6303139  0.6303139  0.6303139  0.70387346 0.70387346 0.70387346]], shape: (1, 6)
+forward state : [[0.6303139 0.6303139 0.6303139]], shape: (1, 3)
+backward state : [[0.70387346 0.70387346 0.70387346]], shape: (1, 3)
+```
+
+![image](https://wikidocs.net/images/page/94748/bilstm3.PNG)
+
+__5__개의 값 반환      
+
+__return_state__가 __True__인 경우 정방향 LSTM의 은닉 상태와 셀 상태, 역방향 LSTM의 은닉 상태와 셀 상태 4가지를 반환      
+
+__forward_h__와 __backward_h__는 각각 정방향 LSTM의 마지막 시점의 은닉 상태와 역방향 LSTM의 첫번째 시점의 은닉 상태값     
+
+​	-> __이 두 값을 연결한 값이 hidden_states에 출력되는 값__
+
+​       
+
+__return_sequences__가 __False__인 경우 정방향 LSTM의 마지막 시점의 은닉 상태와 역방향 LSTM의 첫번째 시점의 은닉 상태가 연결된 채 반환 
+
+​	-> __첫번째 출력값의 크기 (1, 6)__      
+
+
+
+셀 상태는 각각 forward_c와 backward_c에 저장만 하고 출력하지 않았다      
+
+<br/>
+
+현재 은닉 상태의 값을 고정시켜두었기 때문에 __return_sequences__를 __True__로 할 경우, 출력이 어떻게 바뀌는지 비교가 가능     
+
+```python
+bilstm = Bidirectional(LSTM(3, return_sequences=True, return_state=True, \
+                            kernel_initializer=k_init, bias_initializer=b_init, recurrent_initializer=r_init))
+hidden_states, forward_h, forward_c, backward_h, backward_c = bilstm(train_X)
+
+
+print('hidden states : {}, shape: {}'.format(hidden_states, hidden_states.shape))
+print('forward state : {}, shape: {}'.format(forward_h, forward_h.shape))
+print('backward state : {}, shape: {}'.format(backward_h, backward_h.shape))
+
+hidden states : [[[0.3590648  0.3590648  0.3590648  0.70387346 0.70387346 0.70387346]
+  [0.5511133  0.5511133  0.5511133  0.5886358  0.5886358  0.5886358 ]
+  [0.5911575  0.5911575  0.5911575  0.39516988 0.39516988 0.39516988]
+  [0.6303139  0.6303139  0.6303139  0.21942243 0.21942243 0.21942243]]], shape: (1, 4, 6)
+forward state : [[0.6303139 0.6303139 0.6303139]], shape: (1, 3)
+backward state : [[0.70387346 0.70387346 0.70387346]], shape: (1, 3)
+```
+
+![image](https://wikidocs.net/images/page/94748/bilstm1.PNG)
+
+__hidden states__의 출력값에서 이제 __모든 시점의 은닉 상태 출력__     
+
+__역방향 LSTM의 첫번째 시점의 은닉 상태__는 더 이상 __정방향 LSTM의 마지막 시점의 은닉 상태__와 연결되는 것이 아니라 __정방향 LSTM의 첫번째 시점의 은닉 상태__와 연결된다    
+

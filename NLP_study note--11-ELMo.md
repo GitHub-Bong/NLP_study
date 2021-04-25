@@ -18,7 +18,7 @@
 
 ELMo의 가장 큰 특징          
 
-**사전 훈련된 언어 모델(Pre-trained language model)**을 사용!        
+**사전 훈련된 언어 모델(Pre-trained language model)** 을 사용!        
 
 <br/>       
 

@@ -15,6 +15,14 @@
   - [Decoder](#디코더)
     - [Masked Multi-head Self-Attention](#Masked-Multi-head-Self-Attention)
     - [Multi-head Attention(Encoder-Decoder Attention)](#Multi-head-AttentionEncoder-Decoder-Attention)
+- [Transformer 요약](#Transformer-요약)
+  - [embedding + Positional Encoding?](#embedding--Positional-Encoding)
+  - [2가지 Self-Attention](#2가지-Self-Attention)
+  - [두 Self-Attention의 차이](#두-Self-Attention의-차이)
+  - [Multi-head Attention(Encoder-Decoder Attention)](#Multi-head AttentionEncoder-Decoder-Attention)
+  - [3가지 Multi-head Attention](3가지-Multi-head-Attention)
+  - [Position-wise FFNN](#Position-wise-FFNN)
+  - [Add & Norm](#Add--Norm)
 
 
 
@@ -58,6 +66,10 @@ __하나의 고정된 크기의 벡터에 모든 정보를 압축하다보니 �
 __RNN 고질적인 문제인 기울기 손실(Vanishing Gradient) 문제 발생__      
 
 ​      
+
+<br/>
+
+
 
 ## Attention      
 
@@ -130,6 +142,10 @@ Seq2Seq 에서는 출력층의 입력이 t시점 은닉상태 St였는데
 최종적으로    ![image](https://latex.codecogs.com/gif.latex?%5Cwidehat%7By%7D_t%20%3D%20%5Ctext%7BSoftmax%7D%5Cleft%28%20W_y%5Ctilde%7Bs%7D_t%20&plus;%20b_y%20%5Cright%29)       예측 벡터를 얻는다!        
 
 <br/>
+
+<br/>
+
+
 
 ## Transformer       
 
@@ -396,7 +412,7 @@ outputs = tf.keras.layers.Dense(units=d_model)(outputs)
 
 #### Add & Norm       
 
-__두번째 서브층을 지난 인코더의 최종 출력은 여전히 인코더의 입력 크기였던  ![image](https://latex.codecogs.com/gif.latex?%28seq%5C%3A%20%5C%3A%20len%2C%5C%20d_%7Bmodel%7D%29)  __        
+__두번째 서브층을 지난 인코더의 최종 출력은 여전히 인코더의 입력 크기__ 였던  ![image](https://latex.codecogs.com/gif.latex?%28seq%5C%3A%20%5C%3A%20len%2C%5C%20d_%7Bmodel%7D%29)          
 
 ​             
 
@@ -466,9 +482,15 @@ __층 정규화__
 
 
 
-<br/>
+<br/>         
+
+
+
+<br/>       
 
 <br/>
+
+
 
 ### 디코더       
 
@@ -523,4 +545,207 @@ Query : Decoder 행렬    (검은색 화살표 : 디코더의 첫 번째 서브�
 Key=Value : Encoder 행렬   (두 빨간색 화살표  :인코더의 마지막 층에서 온 행렬)        
 
 ![image](https://wikidocs.net/images/page/31379/%EB%94%94%EC%BD%94%EB%8D%94%EB%91%90%EB%B2%88%EC%A7%B8%EC%84%9C%EB%B8%8C%EC%B8%B5%EC%9D%98%EC%96%B4%ED%85%90%EC%85%98%EC%8A%A4%EC%BD%94%EC%96%B4%ED%96%89%EB%A0%AC_final.PNG) 
+
+<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+
+## Transformer 요약       
+
+__인코더 n개 - 디코더 n개 구조__      
+
+__Attention만으로 구현__      
+
+​         
+
+![image](https://wikidocs.net/images/page/31379/transformer_attention_overview.PNG)
+
+### embedding + Positional Encoding?       
+
+RNN 은 순차적으로 단어 입력 받음       
+
+-> 각 단어에 위치 정보 내재      
+
+Transformer는 문장 전체 한 번에 입력 받음      
+
+-> 단어 임베딩 벡터에 위치 정보 더해줘야 함       
+
+[Positional Encoding](#Positional-Encoding) 
+
+이로써 Transformer의 입력은 __순서 정보가 고려된 임베딩 벡터__  됨         
+
+<br/>
+
+<br/>
+
+![image](https://wikidocs.net/images/page/31379/transformer_attention_overview.PNG)
+
+### 2가지 Self-Attention     
+
+인코더의 Multi-head __Self-Attention__      
+
+디코더의 Masked Multi-head __Self-Attention__                   
+
+__(1) 문장 행렬에 가중치 행렬을 곱해 Q 행렬, K 행렬, V 행렬을 구한다__        
+
+![image](https://wikidocs.net/images/page/31379/transformer12.PNG)
+
+
+
+__(2) Q 벡터와 K 벡터를 내적한 결과 행렬 값에 전체적으로 ![image](https://latex.codecogs.com/gif.latex?%5Csqrt%7Bd_%7Bk%7D%7D) 를 나누어 Attention Score 행렬 구한다__          
+
+![image](https://wikidocs.net/images/page/31379/transformer15.PNG)  
+
+​         
+
+__(3) Attention Score 행렬에 softmax  함수 적용해 Attention Distribution 행렬 구한다__       
+
+__(4) 마지막으로 V 행렬 곱해  Attention Value 행렬 얻는다__     
+
+
+
+![image](https://wikidocs.net/images/page/31379/transformer16.PNG)
+
+ ![image](https://latex.codecogs.com/gif.latex?Attention%28Q%2C%20K%2C%20V%29%20%3D%20softmax%28%7BQK%5ET%5Cover%7B%5Csqrt%7Bd_k%7D%7D%7D%29V) 
+
+​         
+
+<br/>
+
+### 두 Self-Attention의 차이      
+
+__Padding Mask vs Look-Ahead Mask__       
+
+인코더의 Multi-head Self-Attention은 Padding Mask 적용         
+
+![image](https://wikidocs.net/images/page/31379/pad_masking2.PNG)
+
+단어 간 유사도를 구하는 일에 실질적인 의미를 가지지 않은 '<pad>'  에 대해 유사도를 구하지 않도록       
+
+이후 Softmax 함수를 지나면서 0에 굉장히 가까운 값이 됨         
+
+​         
+
+디코더의 Masked Multi-head Self-Attention은 Padding Mask, Look-Ahead Mask 둘 다 적용       
+
+![image](https://wikidocs.net/images/page/31379/%EB%A3%A9%EC%96%B4%ED%97%A4%EB%93%9C%EB%A7%88%EC%8A%A4%ED%81%AC.PNG)
+
+자기 자신과 이전 단어들만을 참고할 수 있게 마스킹 적용 
+
+​      
+
+<br/>
+
+![image](https://wikidocs.net/images/page/31379/transformer_attention_overview.PNG)
+
+### Multi-head Attention(Encoder-Decoder Attention)      
+
+![image](https://wikidocs.net/images/page/31379/%EB%94%94%EC%BD%94%EB%8D%94%EB%91%90%EB%B2%88%EC%A7%B8%EC%84%9C%EB%B8%8C%EC%B8%B5.PNG)
+
+![image](https://wikidocs.net/images/page/31379/%EB%94%94%EC%BD%94%EB%8D%94%EB%91%90%EB%B2%88%EC%A7%B8%EC%84%9C%EB%B8%8C%EC%B8%B5%EC%9D%98%EC%96%B4%ED%85%90%EC%85%98%EC%8A%A4%EC%BD%94%EC%96%B4%ED%96%89%EB%A0%AC_final.PNG)
+
+Query : Decoder 행렬    (검은색 화살표 : 디코더의 첫 번째 서브층의 결과 행렬)       
+
+Key=Value : Encoder 행렬   (두 빨간색 화살표  :인코더의 마지막 층에서 온 행렬)        
+
+​            
+
+<br/>
+
+ ![image](https://wikidocs.net/images/page/31379/transformer_attention_overview.PNG)
+
+### 3가지 Multi-head Attention            
+
+인코더의 __Multi-head__  Self-Attention         
+
+디코더의 Masked __Multi-head__  Self-Attention       
+
+디코더의 __Multi-head__  Attention(Encoder-Decoder Attention)
+
+​        ![image](https://wikidocs.net/images/page/31379/transformer17.PNG)
+
+![image](https://wikidocs.net/images/page/31379/transformer18_final.PNG)     
+
+
+
+![image](https://wikidocs.net/images/page/31379/transformer19.PNG)
+
+__인코더의 입력이었던 문장 행렬의 크기 ![image](https://latex.codecogs.com/gif.latex?%28seq%5C%3A%20%5C%3A%20len%2C%5C%20d_%7Bmodel%7D%29)   와 동일__      
+
+
+
+Transformer는 다수의 인코더를 쌓은 형태이기 때문에 __인코더에서의 입력의 크기가 출력에서도 동일 크기로 계속 유지되어야만__  다음 인코더에서도 다시 입력이 될 수 있다       
+
+​         
+
+<br/>
+
+<br/>
+
+![image](https://wikidocs.net/images/page/31379/transformer_attention_overview.PNG)
+
+### Position-wise FFNN        
+
+![image](https://latex.codecogs.com/gif.latex?FFNN%28x%29%20%3D%20MAX%280%2C%20x%7BW_%7B1%7D%7D%20&plus;%20b_%7B1%7D%29%7BW_2%7D%20&plus;%20b_2)
+
+여기서 x는 Multi-head attention 결과 나온 ![image](https://latex.codecogs.com/gif.latex?%28seq%5C%3A%20%5C%3A%20len%2C%5C%20d_%7Bmodel%7D%29) 크기 행렬        
+
+```python
+outputs = tf.keras.layers.Dense(units=dff, activation='relu')(attention)
+outputs = tf.keras.layers.Dense(units=d_model)(outputs)
+```
+
+![image](https://wikidocs.net/images/page/31379/positionwiseffnn.PNG)
+
+__출력은 입력의 크기 였던 ![image](https://latex.codecogs.com/gif.latex?%28seq%5C%3A%20%5C%3A%20len%2C%5C%20d_%7Bmodel%7D%29) 의 크기 와 동일__        
+
+​         
+
+<br/>
+
+### Add & Norm       
+
+__잔차 연결(residual connection)__ 과 __층 정규화(layer normalization)__         
+
+__잔차 연결__       
+
+![image](https://wikidocs.net/images/page/31379/transformer22.PNG)
+
+​         
+
+![image](https://latex.codecogs.com/gif.latex?x&plus;Sublayer%28x%29)
+
+
+
+__층 정규화__       
+
+![image](https://latex.codecogs.com/gif.latex?LN%20%3D%20LayerNorm%28x&plus;Sublayer%28x%29%29)        
+
+잔차 연결을 거친 결과는 이어서 층 정규화 거친다  
+
+![image](https://wikidocs.net/images/page/31379/layer_norm_new_2_final.PNG)
+
+​       
+
+![image](https://latex.codecogs.com/gif.latex?%5Chat%7Bx%7D_%7Bi%2C%20k%7D%20%3D%20%5Cfrac%7Bx_%7Bi%2C%20k%7D-%5Cmu%20_%7Bi%7D%7D%7B%5Csqrt%7B%5Csigma%20%5E%7B2%7D_%7Bi%7D&plus;%5Cepsilon%7D%7D)
+
+​          
+
+다음 __감마와 베타 이용 (초기값 각각 1, 0  학습 가능한 파라미터)__       
+
+![image](https://wikidocs.net/images/page/31379/%EA%B0%90%EB%A7%88%EB%B2%A0%ED%83%80.PNG)  
+
+​          
+
+층 정규화의 최종 수식        
+
+![image](https://latex.codecogs.com/gif.latex?ln_%7Bi%7D%20%3D%20%5Cgamma%20%5Chat%7Bx%7D_%7Bi%7D&plus;%5Cbeta%20%3D%20LayerNorm%28x_%7Bi%7D%29)            
+
+
+
+
 

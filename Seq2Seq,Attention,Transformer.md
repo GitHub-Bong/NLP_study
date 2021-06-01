@@ -19,7 +19,7 @@
   - [embedding + Positional Encoding?](#embedding--Positional-Encoding)
   - [2가지 Self-Attention](#2가지-Self-Attention)
   - [두 Self-Attention의 차이](#두-Self-Attention의-차이)
-  - [Multi-head Attention(Encoder-Decoder Attention)](#Multi-head AttentionEncoder-Decoder-Attention)
+  - [Multi-head Attention(Encoder-Decoder Attention)](#Multi-head-AttentionEncoder-Decoder-Attention)
   - [3가지 Multi-head Attention](3가지-Multi-head-Attention)
   - [Position-wise FFNN](#Position-wise-FFNN)
   - [Add & Norm](#Add--Norm)
@@ -624,7 +624,7 @@ __Padding Mask vs Look-Ahead Mask__
 
 ![image](https://wikidocs.net/images/page/31379/pad_masking2.PNG)
 
-단어 간 유사도를 구하는 일에 실질적인 의미를 가지지 않은 '<pad>'  에 대해 유사도를 구하지 않도록       
+단어 간 유사도를 구하는 일에 실질적인 의미를 가지지 않은 '<패드>' 에 대해 유사도를 구하지 않도록       
 
 이후 Softmax 함수를 지나면서 0에 굉장히 가까운 값이 됨         
 

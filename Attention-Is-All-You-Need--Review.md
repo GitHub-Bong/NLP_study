@@ -71,7 +71,7 @@ Attention mechanism은 RNN과 결합해 사용되어왔다.
 
 __Self-Attention__ 가끔 intra-attention이라고도 불리는 메커니즘은       
 
-__하나의 시퀀스에서 다른 위치에 있는 단어들끼리 서로 가중치를 계산해 시퀀스를 잘 표현하도록 하는 메커니즘__이다.      
+__하나의 시퀀스에서 다른 위치에 있는 단어들끼리 서로 가중치를 계산해 시퀀스를 잘 표현하도록 하는 메커니즘__ 이다.      
 
 Reading comprehension, abstractive summarization, textual entailment 등과 같은 task들에서 성공적으로 사용되고 있다.     
 
@@ -103,7 +103,7 @@ __Self-attention__  과 __point-wise__ 를 쌓은 구조를 인코더와 디코�
 
 __Encoder__ :      
 
-논문에서는 __6개의 동일한 Layer __ 로 구성      
+논문에서는 __6개의 동일한 Layer__  로 구성      
 
 각 Layer은 __2 sub-layers__ 로 구성 
 
@@ -111,15 +111,17 @@ __Encoder__ :
 
 두 번째 second-layer은 __position-wise fully connected feed-foward network__      
 
-각 sub-layer마다 __residual connection__ 과 __layer normalization__ 을 거쳐 __LayerNorm(x + Sublayer(x))__ 이라는 출력을 얻게 된다.      
+각 sub-layer마다 __residual connection__ 과 __layer normalization__ 을 거쳐     
 
-모든 층들의 결과는 임베딩 층의 차원과 __동일한 차원__을 갖게 된다. (논문에서는 512차원)      
+__LayerNorm(x + Sublayer(x))__ 이라는 출력을 얻게 된다.      
+
+모든 층들의 결과는 임베딩 층의 차원과 __동일한 차원__ 을 갖게 된다. (논문에서는 512차원)      
 
 ​        
 
 __Decoder__ :        
 
-논문에서는 __6개의 동일한 Layer __ 로 구성      
+논문에서는 __6개의 동일한 Layer__ 로 구성      
 
 디코더에는 인코더의 출력을 가지고 attention mechanism을 수행하는 __multi-head attention__ 이라는 sub-layer가 있다.       
 
@@ -363,7 +365,7 @@ __Label Smoothing__
 
 __Machine Translation__       
 
-![image](https://d3i71xaburhd42.cloudfront.net/204e3073870fae3d05bcbc2f6a8e263d9b72e776/8-Table2-1.png)
+![image](https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcHPKRL%2FbtqMn4WIlJU%2F9D5KHc1xLokDJFs4kNKPA0%2Fimg.png)
 
 big transformer model은 기존의 SOTA 모델보다 훨씬 좋은 성능을 보였다.     
 
@@ -377,7 +379,7 @@ __Model Variations__
 
 Transformer의 다양한 하이퍼 파라미터들의 중요도를 측정하기 위해 English-to-German 데이터를 사용해 다양하게 바꿔가며 측정했다.     
 
-![image](https://d3i71xaburhd42.cloudfront.net/204e3073870fae3d05bcbc2f6a8e263d9b72e776/9-Table3-1.png)
+![image](https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FmlQ48%2FbtqHEdEA2xO%2FDBWt1p2ohb0gyAu3vrXKOK%2Fimg.png)
 
 (A)  : head의 수를 바꿔봤다. 그에 따라 ![image](https://latex.codecogs.com/gif.latex?d_k%2C%20%5C%3A%20d_v)  가 바뀌었다. 8일때 가장 성능이 좋았다.      
 
@@ -399,7 +401,7 @@ RNN Grammar을 제외한 모든 이전 모델들보다 좋은 성능을 보였�
 
 인풋보다 아웃풋이 길기 때문에 maximum output length를 input length 보다 300 길게 했다.       
 
-![image](https://d3i71xaburhd42.cloudfront.net/204e3073870fae3d05bcbc2f6a8e263d9b72e776/9-Table4-1.png)
+![image](https://greeksharifa.github.io/public/img/2019-08-17-Attention%20Is%20All%20You%20Need/05.png)
 
 ​       
 
